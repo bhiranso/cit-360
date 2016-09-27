@@ -1,69 +1,90 @@
 ---
 - hosts: web
   vars:
-    db_password: password
     server_name: curriculum
     service_name: curriculum
     service_version: 1.0
-    app_key: QujjaJs3fxwtnTl7FiqhEEn1ACkf7YZW
     app_env: test
     db_host: localhost
     db_database: curriculum
     db_username: curriculum
     db_port: 3306
     service_dir: /usr/share/nginx/{{ service_name }}
+  vars_files:
+    - secrets.yml
   tasks:
-    - become: yes
+    - name: one
+      become: yes
       lineinfile: dest=/etc/sysconfig/selinux regexp="^SELINUX=" line="SELINUX=permissive"
 
-    - become: yes
+    - name: two
+      become: yes
       command: setenforce 0
 
-    - yum: name=epel-release update_cache=yes state=present
+    - name: three
+      become: yes
+      yum: name=epel-release update_cache=yes state=present
 
-    - become: yes
+    - name: four
+      become: yes
       yum: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
       register: nginx_install
 
-    - become: yes
+    - name: five
+      become: yes
       shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-    - become: yes
+    - name: six
+      become: yes
       copy: src=web/nginx.conf dest=/etc/nginx/nginx.conf mode=0000
       register: nginx_conf
 
-    - become: yes
+    - name: seven
+      become: yes
       template: src=web/vhost.conf.j2 dest=/etc/nginx/conf.d/{{ service_name }}.conf mode=0644
       register: vhost_conf
 
-    - template: src=web/php.ini.j2 dest=/etc/php.ini mode=0644
+    - name: eight
+      become: yes
+      template: src=web/php.ini.j2 dest=/etc/php.ini mode=0644
       register: php_conf
 
-    - become: yes
+    - name: nine
+      become: yes
       copy: src=web/php-fpm-web.conf dest=/etc/php-fpm.d/www.conf mode=0644
       register: php_fpm_conf
 
-    - become: yes
-      systemd: name=nginx state=restarted enabled=yes
+    - name: ten
+      become: yes
+      service: name=nginx state=restarted enabled=yes
       when: nginx_install|changed or nginx_conf|changed or vhost_conf|changed
 
-    - systemd: name=php-fpm state=restarted enabled=yes
+    - name: eleven
+      become: yes
+      service: name=php-fpm state=restarted enabled=yes
       when: nginx_install|changed or php_conf|changed or php_fpm_conf|changed
 
-    - become: yes
-      file: path="{{ service_dir }}" state=file
+    - name: twelve
+      become: yes
+      file: path="{{ service_dir }}" state=directory
 
-    - become: yes
+    - name: thirteen
+      become: yes
       unarchive: src=web/{{ service_name }}.tgz dest="{{ service_dir }}" mode=0755
 
-    - become: yes
+    - name: fourteen
+      become: yes
       command: /usr/local/bin/composer update chdir={{ service_dir }}
 
-    - become: yes
-      command: chmod -R 0777 storage chdir="{{ service_dir }}"
+    - name: fifteen
+      become: yes
+      command: chmod -R 0777 storage chdir={{ service_dir }}
 
-    - command: chown -R nginx:nginx . chdir="{{ service_dir }}"
+    - name: sixteen
+      become: yes
+      command: chown -R nginx:nginx . chdir="{{ service_dir }}"
 
-    - become: yes
+    - name: seventeen
+      become: yes
       template: src=web/env.j2 dest="{{ service_dir }}/.env" mode=0644 owner=nginx
 
