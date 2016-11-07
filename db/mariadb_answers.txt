@@ -1,8 +1,0 @@
-
-Y
-{{ db_password }}
-{{ db_password }}
-Y
-Y
-Y
-Y
