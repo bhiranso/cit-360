@@ -1,0 +1,22 @@
+---
+- hosts: db
+  vars:
+    db_password: password
+  tasks:
+    - copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo mode=0644
+
+    - become: yes
+      apt: name=MariaDB-server,MariaDB-client update_cache=yes state=present
+
+    - become: yes
+      systemd: name=mariadb state=started enabled=yes
+
+    - template: src=db/mariadb_answers.txt dest=/tmp/mariadb_answers.txt mode=0644
+
+    - become: yes
+      shell: /usr/bin/mysql_secure_installation </tmp/mariadb_answers.txt
+
+    - unarchive: src=db/db.tgz dest=~/ mode=0000
+
+    - command: ./make_databases.sh {{ db_password }} localhost chdir=~/db
+      ignore_errors: True
