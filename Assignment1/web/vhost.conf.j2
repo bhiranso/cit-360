@@ -1,0 +1,25 @@
+server {
+    listen       80 default_server;
+    listen       [::]:80 default_server;
+    server_name  {{ server_name }};
+    root         {{ service_dir }}/public/;
+    index        index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+        expires       max;
+        log_not_found off;
+        access_log    off;
+    }
+
+    location ~ \.php$ {
+        try_files     $uri /index.php =404;
+        include       fastcgi_params;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass  127.0.0.1:9000;
+    }
+}
