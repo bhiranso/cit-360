@@ -1,24 +1,19 @@
 ---
 - hosts: db
-  vars_files:
-    - secrets.yml
+  vars:
+    db_password: password
   tasks:
-  - name: include vars
-    include_vars: secrets.yml
+    - name: Step 1
+      become: yes
+      copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo mode=0644
 
-  - name: Add MariaDB repo to yum repo
-    become: true
-    copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo mode=0644
+    - name: Step 2
+      become: yes
+      yum: name=MariaDB-client update_cache=yes state=present
 
-  - name: Download MariaDB client
-    become: yes
-    package: name=MariaDB-client update_cache=yes state=present
+    - name: Step 6
+      unarchive: src=db/db.tgz dest=~/ mode=0700
 
-  - name: Unarchive the database files
-    become: true
-    unarchive: src=db/db.tgz dest=~/ mode=0777
-
-  - name: Run the script to create a db for the website
-    become: yes
-    command: ./make_databases.sh "{{ db_password }}" db-cit360.cny8wymh5igb.us-west-2.rds.amazonaws.com chdir=~/db
-    ignore_errors: True
+    - name: Step 7
+      command: ./make_databases.sh {{ db_password }} databay.ci2zh9osdevn.us-west-2.rds.amazonaws.com chdir=~/db
+      ignore_errors: True
